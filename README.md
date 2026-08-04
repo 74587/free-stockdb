@@ -124,37 +124,51 @@ result = bk.get(
 `get_data()` 面向全市场、长周期和字段筛选；`zb.get()` 面向 39 种技术指标和 5 种指数计算；`bk.get()` 用于股票与行业/概念板块的双向映射。数据和计算始终在本机服务侧完成，避免研究代码反复把全市场数据搬运到远程 API 或临时 DataFrame 中。股票优化查询器rd.get/keys/vals()支持区间a>b，正则*，排序，截取[:num]，遍历，类SQL查询。
 
 ### 批量写入私有存储[./mydb][08-05升级]
-
+#适用于：个性数据，动态因子，实时缓存，私有策略，私有数据，私有数据源，其他小众数据，一次写入本地永久保存
 ```python
 批量写入：
 pipeline=rd.pipe()
-for i in range(1000000):
-    pipeline.mset(table,key,key,value)
+for i in range(10000000):
+    pipeline.mset(table,key,key2,value)
 await pipeline
 ```
 ```python
 单条写入：
-await rd.set(table,key1,key2,value)
+await rd.set(table,value)
+await rd.set(table,key,value)
+await rd.set(table,key,key2,value)
 #value_type:list/dict/int/float/str/bytes/df
 ```
 ```python
-批量读取：
-await rd.get(table,key,key2) ->list/dict/int/float/str/bytes
-await rd.get(table_exp,key_exp,key_exp).get(sub_key).all()[-3:] ->list/dict/int/float/str/bytes
-#_exp支持正则，范围，匹配，截取，遍历，子节点，列式读取
-#get:可替换成 len,keys,delete,vals,set,setr,setl
 字段修改：
-await rd.get(table,key,key2).get("sub_key").set("sub_sub_key").val("newval")
+await rd.set(table,key,key2,new_value)
+await rd.get(table,key,key2).get("sub_key").set("sub_sub_key").val("new_value")
+写入/修改立即可读，无延迟+WAL无丢失。
+```
+```python
+批量读取：
+await rd.get(table,key,key2) ->list/dict/int/float/str/bytes/df
+await rd.get(table_exp,key_exp,key_exp).get(sub_key).all()[-3:] ->list/dict/int/float/str/bytes/df
+#exp：支持正则，范围，匹配，截取，遍历，子节点，列式读取
+#get：可替换成 len,keys,delete,vals,set,setr,setl
+详细参考示例：`rd_test.py`
 ```
 ### 批量挂载数据与单点读取[./dataN][08-05升级]
-sync_url.txt支持多点写入：
-site1 or path1-> minutes_data ->save_to_data_path
-site2 or path2-> days_data    ->save_to_data1_path
-site3 or path3-> ticks_data   ->save_to_data2_path
+sync_url.txt现支持多点写入：
+| 来源 | 类型 | 存储|
+|---|---|---|
+|site1 or path1| minutes_data|save_to_data_path|
+|site2 or path2| days_data |save_to_data1_path|
+|site3 or path3| ticks_data|save_to_data2_path|
+|your_site4_path4| your_data|save_to_your_path|
 ...
+
 自动读取：
+```python
 rd.get()->auto_read_all_data
-#适应于自行存储：私有策略，动态因子，实时缓存，私有数据，私有数据源
+
+```
+
 
 **内置 39 种技术指标：**
 
@@ -234,4 +248,5 @@ cmake --build cpp/build --config Release
 本仓库适用 [项目许可证](LICENSE)。数据版权、使用授权和再分发条件由各数据源及其权利人决定；使用者应自行确认数据源条款。
 
 本项目用于软件学习、数据管理与量化研究，不构成投资建议。任何数据完整性、及时性和交易决策风险均应由使用者独立评估。
-[![Powered by Atlas Cloud](https://www.atlascloud.ai/oss-program/powered-by-atlas-cloud.svg)](https://www.atlascloud.ai/?ref=HRYSJ8)
+
+[08-05]赞助商：[![Powered by Atlas Cloud](https://www.atlascloud.ai/oss-program/powered-by-atlas-cloud.svg)](https://www.atlascloud.ai/?ref=HRYSJ8)
